@@ -2,7 +2,7 @@
 
 
 #define N  5   /* The order of the matrix */
-#define PN  2   /* The number of threads */
+#define PN  5   /* The number of threads */
 
 int _Num = 0;
 int _MatrixIn[N][N],_MatrixOut[N][N];
