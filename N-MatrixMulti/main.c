@@ -1,15 +1,15 @@
 #include "csapp.h"
 
 
-#define N  5   /* The order of the matrix */
-#define PN  5   /* The number of threads */
+#define N  1000   /* The order of the matrix */
+#define PN  2   /* The number of threads */
 
 int _Num = 0;
 int _MatrixIn[N][N],_MatrixOut[N][N];
 pthread_t _Tidps[PN];
-sem_t _Sem;
+sem_t _Sem = 1;
 
-void* ThreadTask(void* tid)
+void* ThreadTask(void* arg)
 {
     int mynum;
     int i,j;
@@ -28,7 +28,7 @@ void* ThreadTask(void* tid)
         }
         else
         {
-            printf("Thread %d will finish\r\n",(int)tid);
+            printf("Thread %d will finish\r\n",Pthread_self());
             return;
         }
     }
@@ -38,10 +38,14 @@ int main()
 {
 
     InitMatrix();
-    PrintMatrix(_MatrixIn);
-
+    //PrintMatrix(_MatrixIn);
+    printf("N=%d,P=%d\r\n",N,PN);
     Sem_init(&_Sem,0,1);
     int i;
+
+    clock_t start,finish;
+    double duration;
+    start = clock();
     for(i=0; i<PN; i++)
     {
         Pthread_create(&_Tidps[i],NULL,ThreadTask,NULL);
@@ -51,8 +55,13 @@ int main()
     {
         Pthread_join(_Tidps[i],NULL);
     }
-
-      PrintMatrix(_MatrixOut);
+    finish = clock();
+    printf("start = %d\r\n", start);  
+    printf("finish = %d\r\n", finish);
+    printf("CLOCKS_PER_SEC = %d\r\n", CLOCKS_PER_SEC);
+    duration=(double)(finish-start)/CLOCKS_PER_SEC;
+    printf("%f 秒\n",duration);
+    //PrintMatrix(_MatrixOut);
     exit(0);
 }
 
@@ -89,4 +98,5 @@ void PrintMatrix(int matrix[][N])
         for(j=0; j<N; j++)
             printf("%d\t",matrix[i][j]);
     }
+    printf("\r\n");
 }
