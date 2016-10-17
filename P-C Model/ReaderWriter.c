@@ -1,21 +1,13 @@
 #include "csapp.h"
+#include <stdlib.h>
 
 int cnt_write;
 sem_t* mutex;
 sem_t *W,*R;
 
-int Run()
+void* Writer(void* tid)
 {
-    cnt_write = 0;
-    Sem_init(mutex,0,1);
-    Sem_init(W,0,1);
-    Sem_init(R,0,1);
-
-    return 0;
-}
-
-void writer(void* tid)
-{
+   // Pthread_detach(Pthread_self());
     P(mutex);
     if(cnt_write ++ == 0) /* first write */
         P(R);
@@ -24,7 +16,7 @@ void writer(void* tid)
     P(W);
     /* writing */
     Sleep(1);
-    printf("Writer %d is done!",*((int*)tid));
+    Write2File(*((int*)tid),1);
 
     P(mutex);
     if(--cnt_write ==0) {V(R);}
@@ -32,8 +24,9 @@ void writer(void* tid)
     V(mutex);
 }
 
-void reader(void* tid)
+void* Reader(void* tid)
 {
+    //Pthread_detach(Pthread_self());
     int isfirstReader = 0;
 
     /* #region
@@ -52,7 +45,62 @@ void reader(void* tid)
     if(!isfirstReader) {P(R);}
     /* Reading */
     Sleep(1);
-    printf("Reader %d is done!",*((int*)tid));
+    Write2File(*((int*)tid),2);
     V(R);
 }
+
+void Write2File(int tid,int type)
+{
+    char strW[30] = "Writer ";
+    char strR[30] = "Reader ";
+    char id[] = {tid +'0',0};
+    char strD[] = " is done!\r\n";
+
+    FILE* fd = fopen("/home/fei/git/ParallelComputing/P-C Model/test","a+");
+    if (fd==0) { printf("can't open file\n"); return;}
+    //fseek(fp,0,SEEK_END);
+     char *test ;
+    if(type == 1)       {test = strcat(strcat(strW,id),strD);}
+    else if(type == 2)  {test = strcat(strcat(strR,id),strD);}
+    fwrite(test,1,strlen(test),fd);
+    fclose(fd);
+    fflush(fd);
+}
+
+int main()
+{
+    mutex = (sem_t*)malloc(sizeof(sem_t));
+    W =(sem_t*)malloc(sizeof(sem_t));
+    R =(sem_t*)malloc(sizeof(sem_t));
+    cnt_write = 0;
+    Sem_init(mutex,0,1);
+    Sem_init(W,0,1);
+    Sem_init(R,0,1);
+
+    Sleep(1);
+
+    int i;
+    pthread_t tid[8];
+    int a[8] = {1,2,3,4,5,6,7,8};
+    for(i=0;i<5;i++)
+    {
+        Pthread_create(&tid[i],NULL,Writer,&a[i]);
+    }
+    for(i=5;i<7;i++)
+    {
+        Pthread_create(&tid[i],NULL,Reader,&a[i]);
+    }
+    for(i=7;i<8;i++)
+    {
+        Pthread_create(&tid[i],NULL,Writer,&a[i]);
+    }
+
+    for(i=0;i<8;i++)
+    {
+        Pthread_join(tid[i],NULL);
+    }
+    return 0;
+}
+
+
 
