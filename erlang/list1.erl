@@ -6,9 +6,13 @@ getBig(X,Y) when X=<Y -> Y.
 getSmall(X,Y) when X>Y -> Y;
 getSmall(X,Y) when X=<Y -> X.
 
+maxl([])->ERR;
+maxl([H|T])->maxl(T,H);
 maxl([],CurMax)->CurMax;
 maxl([H|T],CurMax)->maxl(T,getBig(H,CurMax)).
 
+minl([])->ERR;
+minl([H|T])->minl(T,H);
 minl([],CurMin)->CurMin;
 minl([H|T],CurMin)->minl(T,getSmall(H,CurMin)).
 
